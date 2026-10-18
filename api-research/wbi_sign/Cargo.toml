@@ -1,0 +1,10 @@
+[package]
+name = "wbi_sign"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+md5 = "0.7"
+serde_json = "1"
