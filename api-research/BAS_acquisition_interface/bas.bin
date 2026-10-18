@@ -1,0 +1,348 @@
+
+âÄ∫é¿€í∞ﬁd	 (2ccbf401d:√//M8v1
+/* Flappy Sina - script 1 (place at 0.1s): pause + title screen */
+if (!Global._get("fs_running"))
+{
+    ScriptManager.clearTimer();
+    ScriptManager.clearEl();
+    ScriptManager.clearTrigger();
+    $.frameRate = 24;
+
+    var tMain = $.createComment("Flappy Sina", {x:0, y:0, lifeTime:0, fontsize:60, color:0xFFFFFF});
+    tMain.x = (Player.width - tMain.width) / 2;
+    tMain.y = Player.height * 0.25;
+
+    var tPrompt = $.createComment("ÁÇπÂáªÊí≠ÊîæÈîÆÂºÄÂßãÊ∏∏Êàè", {x:0, y:0, lifeTime:0, fontsize:28, color:0xFFFF00});
+    tPrompt.x = (Player.width - tPrompt.width) / 2;
+    tPrompt.y = Player.height * 0.5;
+
+    var tCredit = $.createComment("2026 bilibili@mtdcmz", {x:0, y:0, lifeTime:0, fontsize:16, color:0xFFFFFF});
+    tCredit.x = (Player.width - tCredit.width) / 2;
+    tCredit.y = Player.height * 0.85;
+
+    Global._set("fs_tMain", tMain);
+    Global._set("fs_tPrompt", tPrompt);
+    Global._set("fs_tCredit", tCredit);
+
+    Player.pause();
+}
+@ô∫â÷Xb2214856866029346048hÄÄ@pÄÊìÀ
+÷üÄÇî∏ôò∞ﬁ»	 (2ccbf401d:éü//M8v1
+/*===============================================================
+ * Flappy Sina - script 2 (place at 0.2s): game logic
+ * 2026 bilibili@mtdcmz
+ *===============================================================*/
+var maxNum = 2147483647;
+var BASE64_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-=";
+
+var gameWidth = 640;
+var gameHeight = 480;
+var pipeWidth = 78;
+var pipeHeight = 480;
+
+var Keyboard = {
+    A: 65,
+    S: 83,
+    W: 87,
+    D: 68
+};
+
+/* physics (per frame, same as the flash original) */
+var pipeSpeed = 5;
+var birdGravity = 1;
+var birdVelocity = 0;
+var birdJumpPower = -12;
+var birdHorizontalSpeed = 8;
+var birdSize = 64;   /* displayed size (32x32 texture drawn at 2x) */
+var birdStartX = 288;
+var birdStartY = 208;
+
+var state = "playing"; /* playing / over */
+var score = 0;
+var pipes = [];
+var keyA = false;
+var keyD = false;
+var gameScale = 1;
+var offX = 0;
+var offY = 0;
+var overEls = [];
+
+var RAW_bird = "5dHdS5NRHAfwH4YXDZxvbHMvFXljCN4YXSSCdNFdKRRil1HiTaDQRXbX3xBk1EVK2wJ7VVylYS9U3nQzJ0Q4clBr0FQqZLXNvTyn8z0vog9brBufRV-4wJ5znvP7nocRVZYLBfLAzaJEu5zd6t-DJHNCRfICU44Y5AO9f4XfDU7lyQv-Wv9Bg1www2fDXj4bavhd4AOfCbr-fpHcoM8vFMgLX-PkgXpGreAzyAsug5xQrf3nC+QGPf90XmpgdADW+O+1bf25PLnhMJPG+NrYtv-nEp8FJ-ld4BW-K+jvqbb+yZ-UAuyXFFKOpskJ+RS1gN7XbikX05JeT6TIBd1pckM2RU44kyYXVEt--XdqhJV1aga2Tg7I8N8QU-R6OblVyby+wM9Cgu-BO6V5gzxgdf+JGDUAi1FTSXH7fiE1MCiw23el5RWpyHaKxiT-PUGfU3OMj9QEgzFqBKv7b0SoDliE7Dss72sX2MyspPIlHhcG+vsFt8sl1Nlsgn7W+5+jUYGF5gQ1d4J3gNX9196QDZgZe-ZCMuVYT4-gdjorot-fyvxL+PSabGB1-9UnVAvsqUm5tLe1lVTpvkruMdWC1f0jD6gGmFm5dHd1-VG5903Z5B2bqtvK-tY7RJDySyyoGJGIYM7I8LDQ19tbUrn3dYylJXjOO8Dqfp1zAWmrf7ajQyiGw4JONpsVJsbHhcujo4Lu0c96P5vJCMXFRUjMdXbCIf7NUC39On1B6X1AYg8dDiEyNCT8mJoSWDIpmbO6KmxMTwvq3Pwjnw-K9VZLv449IJ0NSpN+KRyQkn7pmxJX3gak68pxv-S3sbr-f8lv";
+var RAW_pipeUp = "7Z3Pi53lFcf9WwqKuDEulEbqypEu3MTauohGtBsz3Rgx-gItJSY1bSkkoJiFpbYordJFC7EWV0JSwdKFUQuKtSpUV2allnZR7Lt5z-s99H6Z55l77-s8d+YjfDdhTO58Bs6cc57vOeeKK-hvt-99-d1vfhvVCW5wa8rt9Q8fCP3l00dCb3-+ROj9L54MffTvp0L--O-PQh-956nQe18+GXr78hMh-Xv079d-Vz-PH--2g9Dv-vr90K8vHA49+9p3Qj--w62hJ3+7FXrslzeFjp27IXT0zLWhe356TejwyatCcINbD9z0+9LvVzkkPsJtEzl870ffqBLc4NYDt0sDr1HvDd--KB-HTofeH-iOunT5h6E3B16jMrftUOJ28c7QudduDym3EwOvUY89-63QsWevD9139trQvT+5JnT45JUhuMFtM7lN329RfJM-1-h2aYhro9787JHQ6-94IOTi26+GuDbKcUvxTbjd-+wNoaNnDoTuHeLaqMOnrgrBDW6byK26LtA85MsTIc-tWOjVgdcol4ckbr+-NeS4aXyz3NYQ3+AGtzm5aR5SW79rHqJ1x5ufPRp6-cNjIR-f7gydG+qEUTYPSfXC9aH7Bl6j7hnyj1HrrhfgBrd1c3P9sY8HXqOU28cDr1Hvf3Ei9PaQx4xK8a26rr89lLndHHrs+ZtCx4b8Y5TGtzn7IXCD29r7SJI-pLre9t9Oh1L-TePbp4+Giur6lIdUxrcSbuuos+AGtxm5aVxKeYj02ey7lXBO8c3233bfJz-xm5tDGt-uP3dDyHO7MgQ3uG0it9q-Z78JbnDrgRvC-wa3LrlZry-xLMW0RbzgBrfm3E6+fEvomT-dFnrxjSOh8+8cDV385MGQ9gf+-q9TIa019M-16y8M--+oV4a-d9QLw7836ulXD4X0cz70ixtDR88eCB156uoQ3OC2l7ideumW0DPD5xul3F5592iontuPQ28NXzfqwscPhvTn8sKf7wo9Pfz8RunnfPi5g6HtgdcouMFtr3Kz8W343KP0+9K49Nbnj4eUj4tvyk35nx9+HqP055Xi28Br1MPP3RjS+Hb3wGsU3OC2l7idGniN0njywht3hc6-ux26OMSjUavKQ1J8kzxE461+zocGXqOOnr0uNOvvBbjBbc7fpy9thfRzaj6g8Ue-30tDXBtVwk3joeYhrww-j1H689Kfo8bhh4c6YVSzOgtucOsgvmkeovVCzkOmvKI2vmmc1Pim-66r67Ve6O33Atzgtu564elXbwtpfNP+mH6-y3BL-TeJby8OcW1Uim8Sh3Me0r5vCTe4zcttiieatztuyuGDgcso5fbBV6dCrq7X+On65Kn-1kP+Bje4zVovTH0tx03r+gufHA8VcZM-1-km1yfX-pv2A3Mesrj-Bje47VVu7j0r5SHmPUvjleNm64WB+yj9+xM37b-J50x5iPiiZ+2Tww1uc75nSR5u45u+Z0lcWqpPrv03yXO0rlduPfct4Qa3OeNb4qZ9csNtZXW9cjN5iI1v+u58+uoQ3OC2L7ilemF6z6p9d9b8xPm4XHxLdb3083urF+AGt-Vz2wppPEn9N60Xav0hX50K5XrB+bikTw43uMHt--vk7t1Z++Tqi5Z+WvW7c+I29ffUH+J8XLZeGPKPUXCD217lVuKLrn3PKnt3Nu9Z6d156ud3PZ8FN7itOQ-R3-uaDxT13yTfWKb-pv0E2ycXbu3ms+AGtzZ+SzcPmHzRhlvRu7P4qJ0-xPffpp+vi2+t5ozgBrdZ+2+mXvDzC3X9N1cvJL9lZf9N4xvc4LZXubk5Ixffsj9E53Z3P7-g3rO63h8CN7h157fc-XuW65Orb9PP10-zFL6un+aM5o1vcINboz0Yw+cbpf1q1ycv8Ye4PMTW9QV7pVwe0qxvCTe49bD-zdT1b11+IlTbf0v1gvOH6F6pjt+d4Qa3LnxcS-mip31TJdxyfJvykLz-rYO9UnCDW6s+eeX+t2XmF9IeDPGHlNQL6g9p1reEG9xazQOaPKRkHrDaF238IW7OyM7XyzzgnD4uuMGtmd8y+UNMvaDxbRm-ZUGf3M7XO24d7A+BG9xm3Vfj9kql-eST36Pab+n2k5t9qo5bD-03uMGt1fyC3adaWdfX+kPS-IKJbzq3Cze47Qdu3he9+C7PqnzRua6Xd2fTJy+ZX5i3rocb3DrwhxTlIavZV+Pu8pTU9c1+L8ANbp3tJ-fxbec7ArpPdSl-iIlv22evC8ENbnuVm-NxrcMXXbL3uOSOQMpDOui-wQ1uc+Yhbl-N+Xe2Q6u6I+DvfRwJ6c9R5yx6208ON7jNu-dY4luaB5T95GZPY0mf3O5-S3swFt-PcvP1reIb3ODWrF4Q35TGGVsvyLvzUvtq7LvzoVBv71lwg1s7H37B-SzTf1vmjoDWIym+qd+yszkjuMGth-1I7t7HqnzR7r6z3YNRML8AN7jtVW6uri-pv9XO17t6Ie9TNXNGL2+FuvDVwA1urbilPvm0p1HzEDe3q+9Wy-mip39XP4+795HmjGa89wE3uM16X8a+O091-TJ7MBK3y4+HXP8t33c+FDo5xLVR6d35zIHQrPNZcIPbrNym3+-Ob7kWH5fbT64+LvVFqz+kgzvscINbD3tXaveplr1nTX6SnIdsh5Rb8kWb+QXd-wY3uO1VbrlekP6b7n+TOSCbh1TfETgeyncEjoRK9mB00X+DG9wa1fW2Ty7fb8ncrtuD4er6krs8XczXww1uzebrd-aHXBx4jSrZg1GyTzXPA6rfcvF8fQ-1Atzg1uqOQOKW5nbFFy2+jsRtxrnd9O7c7PcC3ODWgT-E7Sd3dwQMt5I9GPpzcb5o339r1A+BG9x6mNt1-pDaex8l8wuV7869+d-gBrd590pN77ypXrBzu7u-91G2n3znex9d1PVwg1ujuj7336Y+ef0dgYL7zgV32O08YEF8u0MEN7htJDdb14vf0uwnr+YmfYA0v6BzRskfMs0Dprs8XbxnwQ1ujXxcxm-p6oWiPMTulZrexVxdb-eTp3qhzT1KuMGth-un67gjYPdKmbre+rh62KcKN7g14yZ32HV+IflDVl8v5H2q4uNK8wsuvu0+D9E6Am5w2xRuqf8mcSb5Q2r3NNo77IvrhRTfnN+y5z453ODWaP9bmttdwz1K139L+8nNfece9vzADW7z3vtY3CfPd3nEF13tt5x81LlPPvXh-dxuX-UC3ODW7A578odIHrLE-ayy-eRyP0vnAd3+N9Mnhxvc9gU3855l90otcze2pP+m+98kD+njzh3c4NbXPUo7D1jLTb7e1Qvan3d98v78b3CDW6t7H9P7b8l+8uX21Sy+G5vnFyYfS5pfgBvc9gW31fi4yvaTS13v9kqZfaq5T34wtOn+N7jBbZk8JO1-s3swVrT-Lc0v7DwP2N0eDLjBbU4-UtpPvji+5fesne-Glu1-071Suv9N+uTm3TntPW7l44Ib3Oa8wy6fM9ULpk9ef49S85DjIb-3uGRPY-v9b3CDW7N6IfktdU+j7KspqBfsXinhlvyW6g+ReLsx81lwg9ta8pBpP3+RP0TykPo7AjIPaPa-pXnAdN+5N58q3ODGPUrueMINbtyjhBvcuH-KHU+4wY17lNzxhBv3T7lHCTe4cf+UO55wgxv3KOEGN+6fco8SbnDj-il3POEGN+5Rwg1um8cNfwjc4IYfCV8N3OCGPwRfDdzwI+EPgRvc8CPhq4Eb3PCHwA1u+JHw1cANbvhD8NXADW74Q+AGN-xI+GrgBrf17yeX96whjx+V9r8pt8o8RONb5ibvzi6+dXHvA25w68AfovWC9t-k+039N8PNxTetO-TnUrKfvIt+CNzg1oibuyOQ-CGOW+U9yvSeVfnu3Jv-DW5wm-fex-TOm+oF4+MqeXcuiW+2rpe+fd-3AeEGtzZ1fe6-TX3yZe47u7re3s+SeJt8XOYOu+N2hwhucNtIbiu6c1e9n1znF9x+8iHOjtqY+wtwg9u6fVzGb+nqhaI8RPzS7t3Z1fXJx+XyEKnr57yfBTe4Nbtzl+YXFtf1ycdVed85vTubeqHofpbJQ+AGt-3BbeqT5-tZ6g9Zfb2Q7mepjyvNL7j4tvs8ROsIuMFtU7il-pvEmeQPSf23yedcMrdr5+v13Vnjm73D3nGfHG5wW-P8QspDxKeR5nZXtAcj+S1N-03jbarrO9vzAze4rZ-bVqjoHqX6oqv9lnLfOfXJpz68n9vtq16AG9zm5SbzgMkfInmIucO+jD8k1fXCLc0Duv1vpk8ON7jtC27mPcvularsv5X4Q3K9IPvfJA-pYa8U3ODWrq6f4lvRPGAtN-l6Vy9of971yfvzv8ENbm32NOr7r-bfUh6yRHzL+2okD7HzC5OPJc0vwA1u+4LbanxcZfvJpa53e6XMPtXcJz8Y2nT-G9zgtkwekva-2T0YK9r-luYXdp4H7G4PBtzgNqcfKe0nXxzf8nvWFK-K+m9u-5vuldL9b9InN+-Oae9xKx8X3OA2Y72gnzPVC6ZPXr33OOUhx0N+73HJnsb2+9-gBjf2NLLfEm5wY08j3ODGXlD2W8INbtyN5d4u3LhTzN1YuMGNO8Xc24Ub3Oi-wQ1u9HvpW8INbvTf6FvCDW703+AGN-q99C3hBjf6b-Qt4bZf+72691jmF3T-m-qihzphlO4hr97-Vnk-y3G7+-TVIbjBbS9xs3fudO+xqReq5xcuPx5yd3n8-retkO5-2z5zIHRk4DUKbnDbW9zk3ofk52lut6CuX24PhszXp7s8cu-D3o3t4C4P3OA2a-9NuEl9be99VPbf-NzudijP7ZbMAza67ww3uOEPwVcDN7jhD4Eb3PAj4auBG9xm2tMo71ly11V9HYlbZR6i8S1zk3dnF9+62HsMN7h14A-RekH7b-L9pv6b4ebim9Yd7r6z49ZFPwRucGvEze1TdXfYl7nLk96zKt+de-O-wQ1uze7Gar1gfFwl784l8c3W9dK37-tOCtzg1qauz-23qU++jjvs9o6AxNvk4zL3KB03vbcON7htJLcV3fuovZ-l7rBnf8ihULrv3MV7Ftzg1sjHZfyWrl4oykPEL+3enV1dn3xcLg+Run7Wu7Fwg1urex9pfmFxXZ98XJV37ux9Z3c31vm4OrjDDje4teM29cnT-ELyh6y+XtB37eTjSvMLLr7tPg-ROgJucNsUbqn-pnfY1R+S+m+Tz7lkbtfO1+u7c7rD7u5Rdtwnhxvc1jy-kPIQ8Wmkud0V7cFwd9i1-6bxNtX1ne35gRvc1s9tK+T65PnOnfiiq-2Wcucu9cmnPryf2+2rXoAb3OblJvOAyR8ieYi5R7mMPyTV9cItzQO6-W+mTw43uO0LbuY9y+6Vquy-lfhDcr0g+98kD+lhrxTc4Naurp-iW9E8YC03+XpXL2h-3vXJ+-O-wQ1ubfY0pjvs0n9LecgS8S3vq5E8xM4vTD6WNL8AN7jtC26r8XGV7SeXut7tlTL7VHOf-GBo0-1vcIPbMnlI2v9m92CsaP9bml-YeR6wuz0YcIPbnH6ktJ98cXzL71lTvCrrv7n9b7pXSve-SZ-cvDunvcetfFxwg9uM9YJ+zlQvmD559d7jlIccD-m9xyV7Gtvvf4Nb4vY-";
+var RAW_pipeDown = "7Z3Nq13lFcb9WwqKOFEHSiN15JUOnMR+OPCLthNzOzHiNSqYUmJS0xahQoIZpFRLpCodtBCrdCQkFiwdxI9CRasRWkfekVZ0UNoNZa-9LLhPz-tmn332e+75BZ6Bovee+7uwstZ6n7XWVVf9789-vvP1b4a+++OvVem+p64NHXrmhtAjZ28JHX-59tCp1+4MvfCne0OvvHsodOHjndBbnz4R+uCLE6F--PvnIf33lz49Grpw+eHQ+e7r9jrXfb9ep147GDr+0u0hYXKV+QO3Gbjd3-Hqtd3x6nWk49VLP49+znNv3Bt65Z1DoYvdz9nrUserVwk35Xzh44dD+nvR39fp7vfXS3+-cIPbfuKW4tsvbggd+eUtocxtiG8aZ5Sb-rxvdXGqVxm34b+-cHknlLndF9LPAze4bQQ3yUOOnD0QStxevTN0rvvcvXIeotwW5yHvd--cS7ld7P7-Xi6+6ec5-tJWCG5w27fcJL6lekE+j41v726HRsW33aOhVC90cbOXft+Uh8xVZ8ENbnPlIVov2Lp+yAc0-mi9oBzque2dh2id0lz+Bje4TcxN63qNbye6z9Hr1KsHQ6n-pnW95A9j4pt+He2-uTzkRBfXesENbvuJm-bfUr2gdb3GN60XtP8meYj+vNr3rq-r9+6TJ24S3+AGt03j9kjHq1fOQ4Y+eX7PknpBfl6t67V+r81D0nuW5iEpvm2F4Aa3-cTN5SFaL2gecrrLP3q5-luqF8b0yfU9S-KcFzpevU53vHq1kL-BDW6r7ZObd2eJJxrfNP7Y-tu-ToS8P2R4p071gvTfch4i-pAm3rPgBrfF3O7qWPRaGjeTh5x7476Q-lw5Dxnz7jx8nfSe1X2-Xhpv4Qa3deE2fb1g-Jam-1Zd12u9IHEy1-VDf17zELjBbTO43Rhy8U3fefX99-w72yGtxzVevd-lH71KfNFadyRuEt9S-+3lrRDc4LafuNk8RPrkqa7v8o9e2gez9ULtu-O6+9-gBrcR3FwdYeeMJA-Rvlb2cRm-5ST1wtCHd33yKfIQuMFtldyW5uMSf0jiVuAPKXnPSnmI84ekPKSBviXc4NZAn1zjm9bRrq7XuDTGH2LrBTNnpPkS3OC2f7kNdX2eX1g8D6h1fXV8k3cux01-L2l+QfrkcIPbRnBzeYjhpj4NjT-V-hDllnzROyH9vaT41tg8INzg1sK+Go0nmren-pup62v9lhcv74SSP0TrhRbqerjBrek9GKauT-tqhnrBccvz9bKvpmAeML07tzC3Cze4zfSeZfdgiI8r1-V7vzuX5CGu-5b65KZegBvcNoObqeuNjyvvf9sO1e5-c-tqrI9L6hTt2883vwA3uDVQL0jcSD6uNLfr9kpd+btzim86Z5TqeuHWgI8LbnCbhNvJa0PbXZ3QK-uit0J+btf4Q3afCNXuPbbcrN9yhX1yuMFthdzu73j1svtqKt+da-vk6pe+tHs0lHxcKb7J3uOZ6nq4wW2u+tTvlRr+fnf7VM939XYv6w8pmNt1eYidM2pgTyPc4Naajyvtf9N3Z53bXdZ+cnNHIPfJW-DVwA1u8++rsfvf1Mel-hDxdRTlISX7ydXHZfdKtbXnB25wwx+CrwZu+JHwh8ANbviR8NXADW703+AGN-q99N-gBjf6vfQt4QY3+m9wgxv9XvqWcIMb-Tf6lnCD2--PQ+wdgTRntBPSeFU7v+DuUSq3tKcRbnDbp9z0joCt61Meond5dG7X5SGL53Zz-03yENN-S-ML2ief6d4H3ODWdr0wxJmUhyyrT27qBbdPFW5w2whu6T3rQMjWC+6OQOK2OA8p6pOvy50UuMFthfEt78EYPo+Nb3qHfUx8S3fYpV6QPnmq61vwh8ANbq3d+0h1-ZAP2DvstfezErfFffLm8je4wW02v+Xgj0o+roK7sWPim-db7p2HtOCrgRvcVnnfOdX1zseV9r8Necio+87mzp3lpnul4Aa3DePm77C7-W9SLyQf11DX1-q4NA9J71nWb7kVghvc9hO3El90uu8sfgzXf6u+y1Myv5D2NA5zE+rjas1PDje4rXLOyPXJNb7ZO+zKrWAeUN+pU72gvuiUh7R7NxZucHPc3L31UdxMHqJ+yzQPOMkddnnPkvmF5LeEG9zWhNv09YLxW5r+W3Vdr-WCu-eh8-U6vwA3uG0Et+Euj4tv6d6Hue-s5hd0D3nRHQF3h93eEVjdvQ+4wa2FuzzaJ091fZd-9NI+mK0Xat+d193-Bje4jeDm6gg7ZyR5SNpX4+Z23V2epdULMg9o+uRT5CFwg9squS3NxyX+EDtfb-whJe9Zbm7X5yEN9C3hBrfG9r+V3M+yexpr8xBXL5g5o5b35sENbpPfdy6YB9S6vjq+yTuX45b2v5k9GHCD20Zwc3mI4Zb2qeqexlp-iHJLvuhh36P+XvJ957bmAeEGN-Y0st8SbnBjTyPc4MZeUPZbwg1uE9b1xseV979th2r3v7l9NdbHJXWK9u3nm1+AG9waqBckbiQfV5rbdXulrvzd2d37yHW9cGvAxwU3uE3C7eS1oe2uTuiVfdFbIT+3a-whu0+EavceW27Wb7nCPjnc4LZCbvd3vHrZfTWV7861fXL1S1-aPRpKPq4U32Tv8Ux1Pdzgxt1Y7u3CDW7cjYUb3LhTzL1duMENfwi+GrjhR8IfAje44UfCVwM3uOEPwVcDN-xI+EPgBjf8SPhq4AY3-CFwgxt+JHw1cIMb-hB8NXCDG-4QuMFtvfxIbq+U5ud2P3mq6+v2k2ve4vrkfu-x0H+AG9w2gpu9I6D3PqReSHnITqjEx+Xj2xAn9d3Z+riavr8AN7itzm9p72el9yzlNviyquObucOu+U-aT95AXQ83uE19P8vWC8lvqfco1R-i-JaL-SG5rhe-panrU59c+28z3bmDG9za9kUPcSb5LZfVfzO+aHdHAG5w2whuqa4-ELK+aHc-K3FbnIcU9d-W5T4g3OC2wviW-ZbD57HxTeruUfFN7ztrvSB9gzS-0MK7M9zg1tqdu1TXD-mAxp-k46q9G5u4LZ4HbC5-gxvcZvNxDX3y5A9xfktzP6uWm-dx7Z2HtPBeDze4Td1-s3O7zh+S5oyGPER-3jH3KF2fPHHT+QW4wW3DuOU5I81D3JyR1AtpX81Q19fuq9E8pMQfcqKrZ3rBDW77iVuJ3zL5Q8SH7Ppv1fcoS3zRaR5w8GOrr6w1nyrc4DaX31Ljica35Ld0-beCOSN9p071gu5-S3mI+EOaeM+CG9wWc7urY9FradxMHqJ7pZLf0uxpHFMvpPcs8VumvVJwg9uacJu+XjB+S9N-q67rtV5we6V0blfn6+EGt43gNux-c-Etzy-IPOA72yG3p1H3XRTtq5G6I+9-c-tqVrdXCm5wa2H-m58zOhiy84BaL9S+O6+7-w1ucBvBzdURds5I8pC0B8PtJ3f735ZWL8jeYzu3u-w8BG5wWyW3pfm4xB9i7wgYf0jJe5bb0+jzkAb6lnCDW2N7pUr2NNr9b7V5iKsXzJxRy-u44Aa3ye8IFMwDal1fHd-knctxS3ulzL0PuMFtI7i5PMRwS3sadf9brT9EuSVf9LCvRn8v+Y5AW-OAcIMb9yi54wk3uHGPEm5w4-4pdzzhBjfuUXLHE27cP+UeJdzgxv1T7njCDW7co4Qb3Lh-yh1PuMGNe5Tc8YQb3LhHCTe4rSU3s6dR5wHT3uMR9z4St4L95M4f0kR8gxvcVnlHoGgeUO8I7N1-K5lfUG7+zt1QjzS3-w1ucGvCHzL4jVP-Tf2WEn-G7Gm0ezDEF639hObqerjBbab45uZ2Nc6kfaoj9krZPY2N7ZWCG9zmuy9zYyhxS37LxfP1dn6hYK9U9kW7ekF8XA3M7cINbi3U9fndWfaT616pCfaplvXfht9jC++AcIPbbPtUVzm36+7ypP3kxm-Z2p0UuMFthf6Qkn2q7n5W9dxuwf2sdblHCTe4zfaeZe7yjMlD3NxudR4CN7htADc7X2-im3t3HnU-q-KOANzgthHcZM7IcXN1veuT689bsgejaM4o7Sff2xe90ndnuMFtpjvFNg+xd+6Gz6-+jSnuUbo+eeK2ynlAuMFtJm5l8wt7zxmV7Cf-4IufhKrreuGm33euPRhwg1trd4o1brg+eRm3gr1SZm63aB6wtTsCcIPbbHNGI-whY+oFu5+8BR8X3OA2zz1K7+Ny9YLeudsJ1d5hL7n34fKQ+fwhcIPbTPvfSnzRE-TJ633Ruk+1gTsCcIPbKvtvrl6w8wsT+ENK9qmqL7qFPjnc4DaT31J9jPbd2cwZqd+j7I7AYh+Xi28t9MnhBreV+i3NfL2bXyip65fni9Y77I35ouEGt7nqhZK7PCP2k9u9Umm+fvG7cxN3x+AGt6l9XGYPhv79nn3Ruv9N-CG171nuzp3dT753vQA3uO1bbrXvzqn-NuQDeU+j4TaiT572qZp9NS3kIXCDW3PcjD-E7X+r7b-Vvmc17eOCG9yWdO-D3c9KdX3BnNGY-eR2T6P6Lc08INzgtl+5Fe1ptHfYF8e3UfMLlb7oFt7r4Qa3yd+zdE+jvZ8l3Ox71pXfESiZB7T3PuZ6d4Yb3BqoF0rm6+0eDOmnVb87i29T+3st+y3hBre58hB3P8u9Z7m9x26fasl7Vp5fMNxa6JPDDW6z3WEf8vA0D5juOw9+y2XV9ZabuZ8FN7htBrdhzujI2QOhkjsCU9z7cPcoW9tPDje4tdZ-8-ezJL6l96xhbqis-yZ3BMz8gqvrW+5bwg1uU8S3fIfd+bjMPtUl3XfO785a1w+-r9b+XoAb3ObaK+Xu8rj5+vr7WcO+KY2Htfvf5tuDATe4zbWvZqgX7N3Ygrs8mVvd-reifaoNvGfBDW4t78Gwe6WWlYfoHgxzl6fp+Sy4wW1J3Par4Aa3RrglXqhIcIPbbNyIZ1WxDm5wWwtud5+4OvS9n10XUl-0g2duDj3+3K2hY7+5LfT07+8IPfvHb4V+feHu0G--8oPQH-76w9Drf38o9OY-Hw29vfuj0N8+ezL00VdPhbTW+Oirk6H3uv+ul34duMFtPbldE3LcDj97c+jxX90aOvbiVki5nel49fLctkOZ22Oht3ePhpTDR1+eDGVuA0-lrP0BuMFtLbkdvyZUxE3j24u3hXJ8+3aoOr598mhI49J7nx0LXe649FJul798KpTj28AfbnBbe24-vS70QMer1+EzN4Vq49vzF+4JeW6HQ29+8lgoxbfPnwzZPKTj1Uu56XwT3OC2ntyuDn2-i2u9cny7KfT4c98IPdnx6vX07+4IneniWi8X317tePV6-cPDIY1vmj+89-mxkPIp4fZ29--3ghvc1pKb1AuO24Nd-tHLckvxbeD2fMerl41vHz4Usty0XrB1vdQLXRzs9VaXx-SCG9zWkpvGty7-6PXAM9eHXHzzeYjEt4v3hMrq+qH-pj9vzkOGPpuLb6munzoPgRvcJufm6vrrQ4fP3BzSesHFtzF98j93vHpp-pD7byYPMfFttf0QuMFtMbd15KA-l-68tfW7fn39vvp54Aa3Frgh-G9wa5Ybf67sz38B";
+
+function extract(data)
+{
+    data = (data.split("\r")).join("");
+    data = (data.split("\n")).join("");
+
+    var bmd = Bitmap.createBitmapData(1, 1);
+    var output = bmd.getPixels(bmd.rect);
+    output.clear();
+
+    var dataBuffer = [];
+    dataBuffer.length = 4;
+    var outputBuffer = [];
+    outputBuffer.length = 3;
+
+    for (var i = 0; i < data.length; i += 4)
+    {
+        for (var j = 0; j < 4 && i + j < data.length; j++)
+        {
+            dataBuffer[j] = BASE64_CHARS.indexOf(data.charAt(i + j));
+        }
+
+        outputBuffer[0] = (dataBuffer[0] << 2) + ((dataBuffer[1] & 0x30) >> 4);
+        outputBuffer[1] = ((dataBuffer[1] & 0x0f) << 4) + ((dataBuffer[2] & 0x3c) >> 2);
+        outputBuffer[2] = ((dataBuffer[2] & 0x03) << 6) + dataBuffer[3];
+
+        for (var k = 0; k < outputBuffer.length; k++)
+        {
+            if (dataBuffer[k + 1] == 64)
+                break;
+            output.writeByte(outputBuffer[k]);
+        }
+    }
+
+    output.inflate();
+
+    output.position = 0;
+
+    return output;
+}
+
+function loadBitmapData(width, height, raw)
+{
+    var bmd = Bitmap.createBitmapData(width, height);
+    bmd.setPixels(bmd.rect, extract(raw));
+    return bmd;
+}
+
+/* game coords -> player coords (no canvas: every element sits on root) */
+function updateViewTransform()
+{
+    var scaleX = Player.width / gameWidth;
+    var scaleY = Player.height / gameHeight;
+    if (scaleX < scaleY)
+        gameScale = scaleX;
+    else
+        gameScale = scaleY;
+    offX = (Player.width - gameWidth * gameScale) / 2;
+    offY = (Player.height - gameHeight * gameScale) / 2;
+}
+
+function place(s, gx, gy, mul)
+{
+    s.scaleX = gameScale * mul;
+    s.scaleY = gameScale * mul;
+    s.x = offX + gx * gameScale;
+    s.y = offY + gy * gameScale;
+}
+
+function createBird()
+{
+    var bmd = loadBitmapData(32, 32, RAW_bird);
+    var shape = Bitmap.createBitmap({bitmapData:bmd, lifeTime:0});
+    bird = {shape:shape, gx:birdStartX, gy:birdStartY};
+    place(shape, bird.gx, bird.gy, birdSize / 32);
+}
+
+var pipeUpBmd;
+var pipeDownBmd;
+function preparePipes()
+{
+    pipeUpBmd = loadBitmapData(pipeWidth, pipeHeight, RAW_pipeUp);
+    pipeDownBmd = loadBitmapData(pipeWidth, pipeHeight, RAW_pipeDown);
+}
+
+function createPipe()
+{
+    var gap = 150;
+    var minPipeY = 100;
+    var maxPipeY = 250;
+
+    var pipeY = Math.floor(Math.random() * (maxPipeY - minPipeY) + minPipeY);
+
+    var topPipe = Bitmap.createBitmap({bitmapData:pipeDownBmd, lifeTime:0});
+    pipes.push({shape:topPipe, isTop:true, scored:false, gx:gameWidth, gy:pipeY - pipeHeight});
+    place(topPipe, gameWidth, pipeY - pipeHeight, 1);
+
+    var bottomPipe = Bitmap.createBitmap({bitmapData:pipeUpBmd, lifeTime:0});
+    pipes.push({shape:bottomPipe, isTop:false, scored:false, gx:gameWidth, gy:pipeY + gap});
+    place(bottomPipe, gameWidth, pipeY + gap, 1);
+
+    /* later-created elements stack on top in this player, so rebuild the
+       scoreboard after each pipe to keep it above bird and pipes */
+    scoreText.remove();
+    createScoreboard();
+}
+
+function createScoreboard()
+{
+    scoreText = $.createComment("Score: " + score, {x:0, y:0, lifeTime:0, fontsize:24, color:0xFFFFFF});
+    scoreText.x = offX + 10 * gameScale;
+    scoreText.y = offY + 10 * gameScale;
+}
+
+function drawOverScreen()
+{
+    var tOver = $.createComment("Game Over  Score: " + score, {x:0, y:0, lifeTime:0, fontsize:40, color:0xFF4040});
+    tOver.x = (Player.width - tOver.width) / 2;
+    tOver.y = Player.height * 0.35;
+
+    var tPrompt = $.createComment("ÊåâÊí≠ÊîæÈîÆÈáçÊñ∞ÂºÄÂßã", {x:0, y:0, lifeTime:0, fontsize:28, color:0xFFFF00});
+    tPrompt.x = (Player.width - tPrompt.width) / 2;
+    tPrompt.y = Player.height * 0.5;
+
+    overEls = [tOver, tPrompt];
+}
+
+function removeOverScreen()
+{
+    for (var i = overEls.length - 1; i >= 0; i--)
+        overEls[i].remove();
+    overEls = [];
+}
+
+function startRound()
+{
+    removeOverScreen();
+    score = 0;
+    scoreText.text = "Score: 0";
+    birdVelocity = 0; /* clear leftover fall speed from the last round */
+    createBird();
+    createPipe();
+    state = "playing";
+}
+
+function hookKeyboard()
+{
+    Player.keyTrigger(function(keyCode) {
+        if (keyCode == Keyboard.A)
+            keyA = true;
+        if (keyCode == Keyboard.D)
+            keyD = true;
+        if (keyCode == Keyboard.W)
+        {
+            if (state == "playing")
+                birdVelocity = birdJumpPower;
+        }
+    }, maxNum);
+    Player.keyTrigger(function(keyCode) {
+        if (keyCode == Keyboard.A)
+            keyA = false;
+        if (keyCode == Keyboard.D)
+            keyD = false;
+    }, maxNum, true);
+}
+
+function updatePipes()
+{
+    for (var i = pipes.length - 1; i >= 0; i--)
+    {
+        var p = pipes[i];
+        p.gx -= pipeSpeed;
+        place(p.shape, p.gx, p.gy, 1);
+
+        if (p.gx + pipeWidth < 0)
+        {
+            p.shape.remove();
+            pipes.splice(i, 1);
+            continue;
+        }
+
+        /* bounding-box collision in game coords (same as flash hitTestObject) */
+        if (bird.gx < p.gx + pipeWidth && bird.gx + birdSize > p.gx &&
+            bird.gy < p.gy + pipeHeight && bird.gy + birdSize > p.gy)
+        {
+            gameOver();
+            return;
+        }
+
+        if (p.isTop && !p.scored && p.gx + pipeWidth < bird.gx)
+        {
+            p.scored = true;
+            score++;
+            scoreText.text = "Score: " + score;
+        }
+    }
+
+    if (pipes.length == 0 || pipes[pipes.length - 1].gx < gameWidth - 300)
+        createPipe();
+}
+
+function updateGame()
+{
+    birdVelocity += birdGravity;
+    bird.gy += birdVelocity;
+
+    if (keyA)
+        bird.gx -= birdHorizontalSpeed;
+    if (keyD)
+        bird.gx += birdHorizontalSpeed;
+    place(bird.shape, bird.gx, bird.gy, birdSize / 32);
+
+    if (bird.gy <= 0 || bird.gy + birdSize >= gameHeight)
+    {
+        gameOver();
+        return;
+    }
+
+    updatePipes();
+}
+
+function gameOver()
+{
+    /* wipe the field, keep the scoreboard; freeze the video */
+    for (var i = pipes.length - 1; i >= 0; i--)
+        pipes[i].shape.remove();
+    pipes = [];
+    bird.shape.remove();
+
+    drawOverScreen();
+    state = "over";
+    Player.pause();
+}
+
+function mainLoop()
+{
+    updateViewTransform();
+
+    if (Player.state != "playing")
+        return; /* paused -> freeze */
+
+    if (state == "over")
+    {
+        /* user pressed play on the game-over screen -> new round */
+        startRound();
+        return;
+    }
+
+    updateGame();
+}
+
+if (!Global._get("fs_running"))
+{
+    Global._set("fs_running", true);
+    updateViewTransform();
+    createScoreboard();
+    preparePipes();
+    hookKeyboard();
+
+    /* first fire at 0.2s: drop the script-1 title and play round 1 */
+    var t = Global._get("fs_tMain");
+    if (t != null) t.remove();
+    t = Global._get("fs_tPrompt");
+    if (t != null) t.remove();
+    t = Global._get("fs_tCredit");
+    if (t != null) t.remove();
+
+    score = 0;
+    createBird();
+    createPipe();
+    state = "playing";
+    $.root.addEventListener("enterFrame", mainLoop);
+}
+@Ø∫â÷Xb2214857054454350080hÄÄ@pÄÊìÀ
+_Ääé‰ä•∞ﬁÿ§	 (2ccbf401d://M8v1
+Player.seek(300);@‰∫â÷Xb2214857497196594432hÄÄ@pÄÊìÀ
